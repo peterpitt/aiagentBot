@@ -9,7 +9,20 @@
 3. **落地藍圖** — 護城河定位、MVP 開發與交付路徑（含 App 安裝包自動存進 Google Drive）、SEO 零成本獲客。
 4. **可交付 Prompt** — 直接可複製的開發 Prompt、SEO 爆款 Prompt、以及 Make/n8n/GitHub Actions + Google Drive API 的完整自動化腳本。
 
-技術：**Next.js 16（App Router）+ React 19 + TypeScript**，透過官方 `@anthropic-ai/sdk` 串流呼叫 Claude。前端是一個深淺色主題、含程式碼複製鈕的對話介面；你的 API Key 只放在伺服器端，不會外洩到瀏覽器。
+技術：**Next.js 16（App Router）+ React 19 + TypeScript**，前端是一個深淺色主題、含程式碼複製鈕的對話介面；所有金鑰只放在伺服器端，不會外洩到瀏覽器。
+
+### 可切換多種模型（雲端 + 本地）
+
+介面上有「模型」下拉選單，可在以下供應商間切換（只會顯示你已在環境變數設定的那些）：
+
+| 供應商 | 走法 | 可跑的模型範例 |
+|---|---|---|
+| **Claude（Anthropic）** | 官方 `@anthropic-ai/sdk` | `claude-opus-5-5`、`claude-sonnet-5-5` |
+| **Ollama（本地）** | OpenAI 相容 `http://localhost:11434/v1` | `qwen2.5`、`llama3.1`、`gemma2`… |
+| **Qwen（通義千問）** | DashScope 或自架 vLLM（OpenAI 相容） | `qwen-max`、`qwen2.5-72b-instruct` |
+| **NVIDIA Nemotron** | build.nvidia.com 或自架 NIM（OpenAI 相容） | `nvidia/nemotron-3-ultra-550b-a55b` |
+
+Claude 走 Anthropic 原生 API；其餘三者都是 **OpenAI 相容端點**，由 `openai` 套件統一呼叫，所以任何 OpenAI 相容的服務（vLLM、LM Studio、text-generation-webui…）改個 `*_BASE_URL` 就能接。下拉選單旁邊還能直接改模型名稱。
 
 ---
 
@@ -66,10 +79,35 @@ npm run start
 
 ## 三、環境變數
 
-| 變數 | 必填 | 說明 |
+至少啟用一個供應商即可（前端選單只顯示有設定的）。完整清單與說明見 `.env.example`，重點如下：
+
+| 變數 | 供應商 | 說明 |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | ✅ | 你的 Anthropic API 金鑰 |
-| `CLAUDE_MODEL` | — | 使用的模型，預設 `claude-opus-5-5`；可改 `claude-sonnet-5-5`（較快較省）或 `claude-haiku-5-5`（最省） |
+| `ANTHROPIC_API_KEY` | Claude | Anthropic 金鑰；設了就啟用 Claude |
+| `CLAUDE_MODEL` | Claude | 預設 `claude-opus-5-5` |
+| `OLLAMA_BASE_URL` / `OLLAMA_ENABLED` | Ollama | 設任一個即啟用；預設端點 `http://localhost:11434/v1` |
+| `OLLAMA_MODEL` | Ollama | 預設 `qwen2.5` |
+| `QWEN_API_KEY` / `QWEN_BASE_URL` | Qwen | 設任一個即啟用（DashScope 或自架） |
+| `NVIDIA_API_KEY` / `NVIDIA_BASE_URL` | NVIDIA | 設任一個即啟用（build.nvidia.com 或自架 NIM） |
+| `DEFAULT_PROVIDER` | — | 預設選取哪個供應商 |
+| `OPENAI_MAX_TOKENS` | 本地/相容端點 | 輸出 token 上限（選填） |
+
+### 本地模型快速開始（Ollama + Qwen）
+
+```bash
+# 1. 安裝 Ollama → https://ollama.com
+ollama pull qwen2.5        # 下載 Qwen 模型（或 qwen2.5:14b 等）
+ollama serve               # 啟動本地伺服器（預設 11434 埠）
+
+# 2. 在 .env.local 加入
+echo "OLLAMA_BASE_URL=http://localhost:11434/v1" >> .env.local
+echo "OLLAMA_MODEL=qwen2.5" >> .env.local
+
+# 3. npm run dev → 介面「模型」選單選「Ollama（本地）」即可
+```
+
+> 本地模型（Ollama / 自架 vLLM / NIM）只有在「跑得到那個端點的機器」上才連得到。
+> 部署到 Vercel 等無伺服器平台時，雲端函式連不到你家的 `localhost`——本地模型請在本機或自架伺服器上跑。
 
 ---
 
@@ -78,12 +116,14 @@ npm run start
 ```
 youthinkourfuture-bot/
 ├── app/
-│   ├── api/chat/route.ts   # 伺服器端串流代理，呼叫 Claude（API Key 只在這裡）
-│   ├── layout.tsx          # HTML 外殼、字型
-│   ├── page.tsx            # 對話介面（含顧問名單、程式碼複製鈕、深淺色主題）
-│   └── globals.css         # boardroom 主題樣式
+│   ├── api/chat/route.ts       # 串流代理：依選擇的供應商路由到 Claude 或 OpenAI 相容端點
+│   ├── api/providers/route.ts  # 回傳目前啟用的供應商清單給前端選單
+│   ├── layout.tsx              # HTML 外殼、字型
+│   ├── page.tsx                # 對話介面（含模型選單、顧問名單、程式碼複製鈕、深淺色主題）
+│   └── globals.css             # boardroom 主題樣式
 ├── lib/
-│   └── advisors.ts         # 12 位顧問的系統提示、名單與範例點子
+│   ├── advisors.ts             # 12 位顧問的系統提示、名單與範例點子
+│   └── providers.ts            # 模型供應商設定（Claude / Ollama / Qwen / NVIDIA）
 ├── .env.example
 ├── package.json
 └── README.md

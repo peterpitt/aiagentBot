@@ -271,6 +271,27 @@ main { flex: 1; padding: 18px 0 6px; }
   padding: 10px 0 14px;
   border-top: 1px solid var(--border);
 }
+.modelbar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px; font-size: 12.5px; color: var(--muted);
+  flex-wrap: wrap;
+}
+.modelbar.warn {
+  color: #c0493f; font-size: 12px;
+}
+.mb-label {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent-ink); font-weight: 700;
+}
+.mb-select, .mb-model {
+  font-family: var(--font-body); font-size: 12.5px; color: var(--fg);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 9px; outline: none;
+}
+.mb-select { cursor: pointer; }
+.mb-model { flex: 1; min-width: 140px; font-family: var(--font-mono); font-size: 12px; }
+.mb-select:focus, .mb-model:focus { border-color: var(--accent); }
+
 .composer-inner {
   display: flex; gap: 9px; align-items: flex-end;
   background: var(--surface); border: 1px solid var(--border);

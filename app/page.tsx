@@ -7,6 +7,7 @@ import { ROSTER, SEEDS } from "@/lib/advisors";
 marked.setOptions({ gfm: true, breaks: true });
 
 type Msg = { role: "user" | "assistant"; content: string };
+type ProviderPublic = { id: string; label: string; defaultModel: string };
 
 function copyText(text: string, btn: HTMLButtonElement) {
   const done = () => {
@@ -95,6 +96,9 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
+  const [providers, setProviders] = useState<ProviderPublic[]>([]);
+  const [providerId, setProviderId] = useState("");
+  const [model, setModel] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -124,6 +128,52 @@ export default function Page() {
       /* ignore */
     }
   }, []);
+
+  // 載入可用的供應商清單（由後端依環境變數決定）
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/providers")
+      .then((r) => r.json())
+      .then((data: { providers: ProviderPublic[]; default: string }) => {
+        if (cancelled) return;
+        const list = data.providers || [];
+        setProviders(list);
+        let savedProvider = "";
+        try {
+          savedProvider = localStorage.getItem("ytof-provider") || "";
+        } catch {
+          /* ignore */
+        }
+        const pick =
+          list.find((p) => p.id === savedProvider)?.id ||
+          list.find((p) => p.id === data.default)?.id ||
+          list[0]?.id ||
+          "";
+        setProviderId(pick);
+        const def = list.find((p) => p.id === pick);
+        if (def) setModel(def.defaultModel);
+      })
+      .catch(() => {
+        /* 離線或端點錯誤時保持空清單 */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const onProviderChange = useCallback(
+    (id: string) => {
+      setProviderId(id);
+      const def = providers.find((p) => p.id === id);
+      if (def) setModel(def.defaultModel);
+      try {
+        localStorage.setItem("ytof-provider", id);
+      } catch {
+        /* ignore */
+      }
+    },
+    [providers],
+  );
 
   const autoGrow = useCallback(() => {
     const ta = taRef.current;
@@ -165,7 +215,7 @@ export default function Page() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payload }),
+        body: JSON.stringify({ provider: providerId, model, messages: payload }),
         signal: controller.signal,
       });
 
@@ -205,7 +255,7 @@ export default function Page() {
       setBusy(false);
       abortRef.current = null;
     }
-  }, [busy, input, messages, autoGrow]);
+  }, [busy, input, messages, autoGrow, providerId, model]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
@@ -322,6 +372,35 @@ export default function Page() {
       </main>
 
       <div className="composer">
+        {providers.length > 0 ? (
+          <div className="modelbar">
+            <span className="mb-label">模型</span>
+            <select
+              className="mb-select"
+              value={providerId}
+              onChange={(e) => onProviderChange(e.target.value)}
+              aria-label="選擇模型供應商"
+            >
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <input
+              className="mb-model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder="模型名稱"
+              spellCheck={false}
+              aria-label="模型名稱"
+            />
+          </div>
+        ) : (
+          <div className="modelbar warn">
+            尚未啟用任何模型供應商 — 請在環境變數設定金鑰或本地端點（見 README）。
+          </div>
+        )}
         <div className="composer-inner">
           <textarea
             id="idea"
