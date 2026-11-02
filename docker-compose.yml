@@ -1,0 +1,17 @@
+# 一鍵啟動 Telegram bot：
+#   1. 準備好 .env.local（至少 TELEGRAM_BOT_TOKEN，建議加 TELEGRAM_ALLOWED_USERS）
+#   2. docker compose up -d        # 背景執行，開機/當機自動重啟
+#   3. docker compose logs -f      # 看 log
+#   4. docker compose down         # 停止
+
+services:
+  bot:
+    build: .
+    image: youthinkourfuture-bot
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    # 讓容器內能連到「跑在主機上的」本地模型（如 Ollama）。
+    # 搭配在 .env.local 設： OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

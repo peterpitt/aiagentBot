@@ -145,6 +145,25 @@ npm run bot
 >
 > 💡 要讓它「24 小時都在」，把 `npm run bot` 用 pm2 / systemd / 開機自動啟動掛著即可；電腦關機時 bot 就離線（這是本地部署的特性）。
 
+### 用 Docker 一鍵跑（小主機 / VM / 樹莓派）
+
+repo 內附 `Dockerfile` 與 `docker-compose.yml`，最適合丟到一台常開的小主機讓 bot 24 小時在線。
+
+```bash
+cp .env.example .env.local      # 填好 TELEGRAM_BOT_TOKEN 等（見上方）
+docker compose up -d            # 背景執行，開機/當機自動重啟
+docker compose logs -f          # 看 log（確認「Telegram bot 啟動中」）
+docker compose down             # 停止
+```
+
+- bot 走長輪詢，**容器不需對外開任何 port**。
+- 環境變數由 `.env.local` 透過 `env_file` 注入（不會烤進映像）。
+- **想在容器裡用「主機上的 Ollama」**：compose 已設好 `host.docker.internal`，只要在 `.env.local` 把端點改成
+  `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` 即可。
+- 想把整個 Ollama 也一起容器化，可再在 compose 加一個 `ollama/ollama` 服務，端點改指向該服務名稱。
+
+> 純雲端模型（Claude / Qwen DashScope / NVIDIA 雲端）用 Docker 跑最單純，不涉及本機網路。
+
 ---
 
 ## 五、專案結構
@@ -159,6 +178,8 @@ youthinkourfuture-bot/
 │   └── globals.css             # boardroom 主題樣式
 ├── bot/
 │   └── telegram.ts             # Telegram bot（長輪詢），重用下面的 lib
+├── Dockerfile                  # 容器化 bot
+├── docker-compose.yml          # docker compose up -d 一鍵啟動（自動重啟）
 ├── lib/
 │   ├── advisors.ts             # 12 位顧問的系統提示、名單與範例點子
 │   ├── providers.ts            # 模型供應商設定（Claude / Ollama / Qwen / NVIDIA）
