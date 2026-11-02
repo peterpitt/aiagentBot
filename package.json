@@ -7,10 +7,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "bot": "tsx bot/telegram.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.3.0",
+    "dotenv": "18.0.9",
+    "grammy": "1.46.0",
     "marked": "18.1.2",
     "openai": "7.47.0",
     "next": "16.4.3",
@@ -21,6 +24,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "tsx": "4.23.15",
     "typescript": "^5.7.0"
   }
 }

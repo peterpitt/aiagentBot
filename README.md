@@ -111,7 +111,43 @@ echo "OLLAMA_MODEL=qwen2.5" >> .env.local
 
 ---
 
-## 四、專案結構
+## 四、Telegram bot（手機隨時呼叫）
+
+想隨時隨地用手機叫出智囊團？這個 repo 內建一個 Telegram bot，用 **long polling（長輪詢）**，
+**不需要公開 IP、不用開 port、不用 webhook**——程式向 Telegram 主動拉訊息即可。
+只要這支程式在你電腦上跑著、電腦開著，就能用手機隨傳隨到，而且能呼叫**同一台電腦上的本地模型（Ollama 等）**。
+
+設定步驟：
+
+```bash
+# 1. 在 Telegram 找 @BotFather → 傳 /newbot → 取得 bot token
+# 2. 在 .env.local 加入（連同你要用的模型設定，如 Ollama）：
+#    TELEGRAM_BOT_TOKEN=123456:ABC...
+#    TELEGRAM_ALLOWED_USERS=你的數字ID     # 強烈建議設，避免別人盜用你的算力/金鑰
+#    BOT_PROVIDER=ollama                   # bot 預設用哪個供應商（選填）
+#    BOT_MODEL=qwen2.5                     # bot 預設模型（選填）
+
+# 3. 啟動 bot（與 Next.js 的 npm run dev 是兩個獨立程式，可只跑這個）
+npm run bot
+```
+
+接著在 Telegram 打開你的 bot，直接傳點子即可。指令：
+
+| 指令 | 作用 |
+|---|---|
+| `/start` | 說明與目前模型 |
+| `/new` | 開新會議（清除對話記憶） |
+| `/model` | 查看目前模型與可切換清單 |
+| `/use <供應商> [模型]` | 切換，例：`/use ollama qwen2.5`、`/use claude` |
+| `/whoami` | 顯示你的 Telegram ID（用來設白名單） |
+
+> 🔒 **務必設 `TELEGRAM_ALLOWED_USERS`**：不設的話，任何知道你 bot 名稱的人都能使用、消耗你的 API 額度或本地算力。先把 bot 跑起來、傳 `/whoami` 給它拿到自己的 ID，再填進去重啟。
+>
+> 💡 要讓它「24 小時都在」，把 `npm run bot` 用 pm2 / systemd / 開機自動啟動掛著即可；電腦關機時 bot 就離線（這是本地部署的特性）。
+
+---
+
+## 五、專案結構
 
 ```
 youthinkourfuture-bot/
@@ -121,9 +157,12 @@ youthinkourfuture-bot/
 │   ├── layout.tsx              # HTML 外殼、字型
 │   ├── page.tsx                # 對話介面（含模型選單、顧問名單、程式碼複製鈕、深淺色主題）
 │   └── globals.css             # boardroom 主題樣式
+├── bot/
+│   └── telegram.ts             # Telegram bot（長輪詢），重用下面的 lib
 ├── lib/
 │   ├── advisors.ts             # 12 位顧問的系統提示、名單與範例點子
-│   └── providers.ts            # 模型供應商設定（Claude / Ollama / Qwen / NVIDIA）
+│   ├── providers.ts            # 模型供應商設定（Claude / Ollama / Qwen / NVIDIA）
+│   └── chat.ts                 # 共用聊天核心（Web 與 Telegram 共用）
 ├── .env.example
 ├── package.json
 └── README.md
