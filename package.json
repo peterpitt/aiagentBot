@@ -1,0 +1,25 @@
+{
+  "name": "youthinkourfuture-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "一人公司頂級 AI 智囊團 bot — 12 位顧問把點子跑成落地藍圖",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.3.0",
+    "marked": "18.1.2",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.7.0"
+  }
+}
