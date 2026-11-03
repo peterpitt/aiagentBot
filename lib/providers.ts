@@ -1,5 +1,5 @@
 // 模型供應商（provider）設定。
-// Claude 走官方 Anthropic SDK；其餘（Ollama 本地、Qwen、NVIDIA Nemotron）
+// Claude 走官方 Anthropic SDK；其餘（Ollama 本地、Qwen、NVIDIA Nemotron、DeepSeek）
 // 皆為 OpenAI 相容端點（/v1/chat/completions），由 openai 套件統一處理。
 // 每個 provider 以環境變數啟用；沒設定的不會出現在前端選單。
 
@@ -68,6 +68,17 @@ const DEFS: ProviderDef[] = [
     baseURL: () =>
       process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
     apiKey: () => process.env.NVIDIA_API_KEY || "nvidia",
+  },
+  {
+    id: "deepseek",
+    label: "DeepSeek",
+    kind: "openai",
+    enabled: () => !!(process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK_BASE_URL),
+    // deepseek-chat（V3）或 deepseek-reasoner（R1，含思維鏈）
+    defaultModel: () => process.env.DEEPSEEK_MODEL || "deepseek-chat",
+    // 官方雲端；自架（Ollama / vLLM 跑 deepseek）可改 DEEPSEEK_BASE_URL
+    baseURL: () => process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+    apiKey: () => process.env.DEEPSEEK_API_KEY || "deepseek",
   },
 ];
 

@@ -21,6 +21,7 @@
 | **Ollama（本地）** | OpenAI 相容 `http://localhost:11434/v1` | `qwen2.5`、`llama3.1`、`gemma2`… |
 | **Qwen（通義千問）** | DashScope 或自架 vLLM（OpenAI 相容） | `qwen-max`、`qwen2.5-72b-instruct` |
 | **NVIDIA Nemotron** | build.nvidia.com 或自架 NIM（OpenAI 相容） | `nvidia/nemotron-3-ultra-550b-a55b` |
+| **DeepSeek** | 官方雲端或自架（OpenAI 相容） | `deepseek-chat`、`deepseek-reasoner` |
 
 Claude 走 Anthropic 原生 API；其餘三者都是 **OpenAI 相容端點**，由 `openai` 套件統一呼叫，所以任何 OpenAI 相容的服務（vLLM、LM Studio、text-generation-webui…）改個 `*_BASE_URL` 就能接。下拉選單旁邊還能直接改模型名稱。
 
@@ -89,6 +90,7 @@ npm run start
 | `OLLAMA_MODEL` | Ollama | 預設 `qwen2.5` |
 | `QWEN_API_KEY` / `QWEN_BASE_URL` | Qwen | 設任一個即啟用（DashScope 或自架） |
 | `NVIDIA_API_KEY` / `NVIDIA_BASE_URL` | NVIDIA | 設任一個即啟用（build.nvidia.com 或自架 NIM） |
+| `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` | DeepSeek | 設任一個即啟用（官方雲端或自架）；`DEEPSEEK_MODEL` 預設 `deepseek-chat` |
 | `DEFAULT_PROVIDER` | — | 預設選取哪個供應商 |
 | `OPENAI_MAX_TOKENS` | 本地/相容端點 | 輸出 token 上限（選填） |
 
